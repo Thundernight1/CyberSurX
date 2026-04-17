@@ -9,7 +9,7 @@ Usage:
 """
 
 import sys
-from src.redteam_master import main
+from redteam_master import main
 
 if __name__ == '__main__':
     sys.exit(main())
