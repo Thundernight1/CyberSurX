@@ -1,0 +1,73 @@
+# RedTeam Physical Suite - Configuration Example
+# HITL (Human-in-the-Loop) Ayarlari
+
+# Temel Ayarlar
+scan_intensity: 4
+ports: "1-65535"
+enable_exploitation: false
+enable_physical_devices: false
+output_dir: "./reports"
+report_formats: ['html', 'json']
+
+# HITL Onay Mekanizmasi Ayarlari
+hitl:
+  # HITL mekanizmasini aktif/pasif yap
+  enabled: true
+  
+  # Onay bekleme suresi (saniye)
+  timeout: 300
+  
+  # Dusuk riskli islemleri otomatik onayla
+  auto_approve_low_risk: false
+  
+  # Bildirim ayarlari
+  notification_email: "security-team@example.com"
+  enable_web_notifications: false
+  enable_email_notifications: false
+  
+  # Onay gerektiren islem tipleri
+  require_approval_for:
+    - exploit              # Exploit calistirma
+    - physical_device      # Fiziksel cihaz kullanimi
+    - credential_dump      # Credential toplama
+    - persistence          # Persistence mekanizmalar
+    - lateral_movement     # Yanal hareket
+    - data_exfiltration    # Veri sizdirma
+    - destructive_action   # Zararli islemler
+  
+  # Otomatik onaylanacak islemler
+  auto_approved_operations:
+    - scan                 # Tarama islemleri
+    - reconnaissance       # Kesif islemleri
+    - information_gathering # Bilgi toplama
+  
+  # Loglama ayarlari
+  log_dir: "./logs/hitl"
+  log_retention_days: 30
+  
+  # Dashboard entegrasyonu (opsiyonel)
+  webhook_url: null
+  api_key: null
+
+# Anthropic API Ayarlari
+anthropic_api_key: null
+
+# Metasploit Ayarlari
+msf_rpc_host: "127.0.0.1"
+msf_rpc_port: 55553
+msf_rpc_user: "msf"
+msf_rpc_pass: null
+
+# Fiziksel Cihaz Ayarlari
+devices:
+  wifi_pineapple:
+    host: "172.16.42.1"
+    username: "root"
+    password: null
+  
+  flipper_zero:
+    serial_port: "/dev/ttyUSB0"
+  
+  sharktap:
+    interface: "eth0"
+    capture_dir: "./captures"

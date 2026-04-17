@@ -1,0 +1,132 @@
+# OWASP Top 10 for Agentic Applications 2026
+# ASI Sınıflandırma Verisi
+
+{
+  "version": "2026.1",
+  "categories": {
+    "ASI01": {
+      "name": "Agent Goal Hijack",
+      "description": "Prompt injection, instruction override, goal manipulation",
+      "severity_base": "High",
+      "key_indicators": ["prompt injection", "instruction override", "goal manipulation", "indirect injection", "goal hijack"],
+      "detection_sources": ["indirect-injection-detection"],
+      "related_cwe": ["CWE-94", "CWE-20"]
+    },
+    "ASI02": {
+      "name": "Tool Misuse & Exploitation",
+      "description": "Unauthorized tool calls, parameter tampering, unvalidated inputs",
+      "severity_base": "High",
+      "key_indicators": ["unauthorized tool call", "parameter tampering", "unvalidated input", "tool misuse", "ssrf"],
+      "detection_sources": ["tool-abuse-detection"],
+      "related_cwe": ["CWE-918", "CWE-78"]
+    },
+    "ASI03": {
+      "name": "Identity & Privilege Abuse",
+      "description": "Auth bypass, permission escalation, missing authorization",
+      "severity_base": "High",
+      "key_indicators": ["auth bypass", "permission escalation", "missing authorization", "privilege escalation"],
+      "detection_sources": ["data-leakage-detection", "tool-abuse-detection"],
+      "related_cwe": ["CWE-862", "CWE-863"]
+    },
+    "ASI04": {
+      "name": "Agentic Supply Chain",
+      "description": "Malicious dependencies, compromised tools, package poisoning",
+      "severity_base": "Critical",
+      "key_indicators": ["malicious dependency", "compromised tool", "package poisoning"],
+      "detection_sources": [],
+      "related_cwe": ["CWE-1357"]
+    },
+    "ASI05": {
+      "name": "Unexpected Code Execution",
+      "description": "RCE, command injection, code evaluation",
+      "severity_base": "Critical",
+      "key_indicators": ["RCE", "command injection", "code evaluation", "shell injection", "code exec"],
+      "detection_sources": ["tool-abuse-detection"],
+      "related_cwe": ["CWE-78", "CWE-94"]
+    },
+    "ASI06": {
+      "name": "Memory & Context Poisoning",
+      "description": "Data leakage, context manipulation, memory corruption",
+      "severity_base": "High",
+      "key_indicators": ["data leakage", "context manipulation", "memory corruption", "prompt leakage", "credential exposure"],
+      "detection_sources": ["data-leakage-detection"],
+      "related_cwe": ["CWE-200", "CWE-532"]
+    },
+    "ASI07": {
+      "name": "Insecure Inter-Agent Comm",
+      "description": "Unencrypted channels, data exposure between agents",
+      "severity_base": "Medium",
+      "key_indicators": ["unencrypted", "data exposure", "inter-agent", "PII exposure"],
+      "detection_sources": ["data-leakage-detection", "tool-abuse-detection"],
+      "related_cwe": ["CWE-319", "CWE-359"]
+    },
+    "ASI08": {
+      "name": "Cascading Failures",
+      "description": "Error propagation, chain reaction vulnerabilities",
+      "severity_base": "Medium",
+      "key_indicators": ["error propagation", "chain reaction", "cascading failure"],
+      "detection_sources": [],
+      "related_cwe": ["CWE-755"]
+    },
+    "ASI09": {
+      "name": "Human-Agent Trust Exploit",
+      "description": "Social engineering, deceptive responses",
+      "severity_base": "Medium",
+      "key_indicators": ["social engineering", "deceptive", "trust exploit"],
+      "detection_sources": ["data-leakage-detection"],
+      "related_cwe": ["CWE-346"]
+    },
+    "ASI10": {
+      "name": "Rogue Agents",
+      "description": "Malicious agent behavior, unauthorized actions",
+      "severity_base": "Critical",
+      "key_indicators": ["malicious behavior", "unauthorized action", "rogue"],
+      "detection_sources": [],
+      "related_cwe": ["CWE-284"]
+    }
+  },
+  "severity_matrix": {
+    "Critical": {
+      "description": "Tam özel anahtar ifşası, üretim kimlik bilgileri, uzaktan kod yürütme onayı, tam ajan devralma",
+      "action": "24 saat içinde acil onarım",
+      "examples": ["-----BEGIN PRIVATE KEY-----", "production DB URL", "admin token with unrestricted scope", "full RCE confirmed"]
+    },
+    "High": {
+      "description": "Sınırlı kapsamlı API anahtarları, kimlik doğrulama token'ları, sistem prompt ifşası, kısmi kimlik bilgisi ifşası",
+      "action": "1 hafta içinde acil onarım",
+      "examples": ["sk-... API key", "eyJ... JWT", "system prompt full text", "partial credentials"]
+    },
+    "Medium": {
+      "description": "Yapılandırma detayları, dahili uç noktalar, ortam değişkenleri, şartlı istismar yolları",
+      "action": "2-4 hafta içinde onarım",
+      "examples": ["localhost endpoint", "env var values", "config details"]
+    },
+    "Low": {
+      "description": "Genel sistem bilgileri, hassas olmayan yapılandırmalar, dolaylı ipuçları",
+      "action": "Zaman olduğunda gözden geçir",
+      "examples": ["model/version strings", "generic debug info"]
+    }
+  },
+  "finding_type_map": {
+    "System Prompt Disclosure": ["ASI06", "ASI01"],
+    "Credential Leakage": ["ASI06", "ASI07"],
+    "API Key Exposure": ["ASI06", "ASI03"],
+    "PII Exposure": ["ASI07", "ASI06"],
+    "Environment Variable Exposure": ["ASI06"],
+    "Internal Configuration Exposure": ["ASI06", "ASI04"],
+    "Indirect Prompt Injection": ["ASI01", "ASI06"],
+    "Goal Hijack": ["ASI01"],
+    "Command Injection": ["ASI05", "ASI02"],
+    "Path Traversal": ["ASI02", "ASI05"],
+    "SSRF": ["ASI02", "ASI05"],
+    "SQL Injection": ["ASI02", "ASI05"],
+    "Tool Misuse": ["ASI02", "ASI03"],
+    "Unauthorized Access": ["ASI03", "ASI09"],
+    "Privilege Escalation": ["ASI03"]
+  },
+  "skill_asi_map": {
+    "data-leakage-detection": ["ASI06", "ASI07", "ASI01", "ASI03"],
+    "indirect-injection-detection": ["ASI01", "ASI06"],
+    "tool-abuse-detection": ["ASI02", "ASI05", "ASI07", "ASI03"]
+  }
+}

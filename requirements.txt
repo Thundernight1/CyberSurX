@@ -1,0 +1,37 @@
+# CyberSurX RedTeam Physical Suite Requirements
+
+# CLI Framework
+typer>=0.9.0
+click>=8.0.0
+
+# Rich UI Components
+rich>=13.0.0
+
+# ASCII Art
+pyfiglet>=1.0.0
+
+# Async support
+aiohttp>=3.8.0
+
+# Configuration
+dotenv>=0.19.0
+
+# Anthropic SDK
+anthropic>=0.18.0
+
+# Optional: For advanced features
+psutil>=5.9.0
+requests>=2.28.0
+pydantic>=2.0.0
+
+# Async support
+asyncio-mqtt>=0.13.0
+
+# Report generation
+jinja2>=3.1.0
+weasyprint>=59.0; platform_system != "Windows"
+
+# Development
+pytest>=7.0.0
+black>=23.0.0
+flake8>=6.0.0
