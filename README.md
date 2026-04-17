@@ -1,112 +1,166 @@
-# CYBERSURX
+# CyberSurX
 
-A professional RedTeam Physical Security Suite combining AI-powered injection testing, network reconnaissance, vulnerability analysis, physical device integration (Flipper Zero, WiFi Pineapple, SharkTap), and automated reporting.
+**Production-Ready RedTeam Physical Security Suite**
 
-## 🚀 Overview
+A comprehensive penetration testing framework with AI injection testing, network reconnaissance, vulnerability scanning, physical device integration, and automated reporting.
 
-**CyberSurX** is a comprehensive penetration testing framework designed for red teams and security professionals. It integrates multiple open-source security tools into a unified command-line interface with intelligent orchestration.
+## 🚀 Features
 
-### Key Features
+### Core Capabilities
+- **🔐 JWT Authentication** - Full user management with role-based access
+- **🗃️ Database-Backed** - SQLite/PostgreSQL with SQLAlchemy ORM
+- **🌐 REST API** - FastAPI with 50+ endpoints
+- **🔍 Real Scanning** - Nmap integration for port scanning
+- **💉 Vulnerability Testing** - SQL injection, XSS detection
+- **🛡️ Physical Devices** - WiFi Pineapple, Flipper Zero support
+- **👤 Human-in-the-Loop** - Approval workflows for critical operations
+- **📊 Multi-Format Reports** - PDF, HTML, JSON export
 
-- **AI Injection Testing**: Prompt security testing using G0DM0D3 jailbreak techniques
-- **Network Reconnaissance**: Nmap-based port scanning and host discovery  
-- **Vulnerability Analysis**: Automated CVE lookup and exploit planning
-- **Physical Device Integration**: Support for Hak5 devices (Pineapple, Flipper, SharkTap)
-- **Human-in-the-Loop (HITL)**: Approval workflows for critical operations
-- **Multi-Format Reporting**: HTML, PDF, JSON, and Markdown output
-- **34 AI Model Orchestration**: Cross-model coordination via Ollama
+## 📦 Installation
 
-## 📋 Requirements
-
-- Python 3.9+
-- Ollama (for AI features)
-- Nmap (for network scanning)
-- Physical devices (optional): WiFi Pineapple, Flipper Zero, SharkTap
-
-## 🛠 Installation
-
+### Requirements
 ```bash
-# Clone the repository
+Python 3.9+
+nmap (system package)
+```
+
+### Setup
+```bash
+# Clone repository
 git clone https://github.com/Thundernight1/CyberSurX.git
 cd CyberSurX
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Configure the tool
-cp config.yaml.example config.yaml
-# Edit config.yaml with your settings
+# Initialize database
+python src/init_db.py
+
+# Start API server
+python -m uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-## 💻 Usage
+## 🎯 Quick Start
 
-### Interactive Mode
+### 1. API Authentication
 ```bash
-python -m src.cli --interactive
+# Register user
+curl -X POST "http://localhost:8000/api/v1/auth/register" \
+  -d "username=admin" \
+  -d "email=admin@cybersurx.com" \
+  -d "password=SecurePass123"
+
+# Login (get JWT token)
+curl -X POST "http://localhost:8000/api/v1/auth/login" \
+  -d "email=admin@cybersurx.com" \
+  -d "password=SecurePass123"
 ```
 
-### Command Line Usage
+### 2. Create Target
+```bash
+curl -X POST "http://localhost:8000/api/v1/targets/" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "name=Test Server" \
+  -d "host=192.168.1.1"
+```
+
+### 3. Run Nmap Scan
+```bash
+# Check nmap installed
+curl "http://localhost:8000/api/v1/scans/nmap-check" -H "Authorization: Bearer $TOKEN"
+
+# Start scan
+curl -X POST "http://localhost:8000/api/v1/scans/nmap?target_id=1&ports=80,443" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### 4. Test for SQL Injection
+```bash
+curl -X POST "http://localhost:8000/api/v1/injection/scan" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "target_url=http://testphp.vulnweb.com" \
+  -d "test_type=sqli"
+```
+
+## 📚 API Documentation
+
+### Authentication Endpoints
+- `POST /api/v1/auth/register` - User registration
+- `POST /api/v1/auth/login` - User login (returns JWT)
+- `GET /api/v1/auth/me` - Current user info
+
+### Target Management
+- `GET /api/v1/targets/` - List targets
+- `POST /api/v1/targets/` - Create target
+- `GET /api/v1/targets/{id}` - Get target
+- `PUT /api/v1/targets/{id}` - Update target
+- `DELETE /api/v1/targets/{id}` - Delete target
+
+### Scan Operations
+- `GET /api/v1/scans/nmap-check` - Check nmap installation
+- `POST /api/v1/scans/nmap` - Start nmap scan
+- `GET /api/v1/scans/` - List scans
+- `GET /api/v1/scans/{id}` - Get scan results
+- `DELETE /api/v1/scans/{id}` - Delete scan
+
+### Injection Testing
+- `GET /api/v1/injection/payloads` - Get available payloads
+- `POST /api/v1/injection/scan` - Run injection test
+- `GET /api/v1/injection/tests` - List tests
+- `GET /api/v1/injection/tests/{id}` - Get test results
+
+## 🧪 Testing
 
 ```bash
-# Show help
-python -m src.cli --help
+# Run all tests
+pytest tests/
 
-# Scan a target
-python -m src.cli scan 192.168.1.1
-
-# Run injection tests
-python -m src.cli inject https://target.com
-
-# Control physical devices
-python -m src.cli device pineapple
-python -m src.cli device flipper
-python -m src.cli device sharktap
-
-# Generate reports
-python -m src.cli report --format html
-python -m src.cli report --format pdf
-
-# Run full pipeline
-python -m src.cli full 192.168.1.1
-
-# Check status
-python -m src.cli status --watch
+# Run specific test files
+pytest tests/database/test_models.py
+pytest tests/api/test_endpoints.py
+pytest tests/cli/test_commands.py
 ```
 
-## 📁 Project Structure
+## 🔧 Architecture
 
 ```
 CyberSurX/
 ├── src/
-│   ├── cli.py                 # Main CLI interface
-│   ├── redteam_master.py      # Core orchestrator
-│   ├── __main__.py            # Entry point
-│   ├── core/
-│   │   ├── base_agent.py      # Agent framework base
-│   │   ├── llm_client.py      # Ollama integration
-│   │   └── hitl.py            # Human-in-the-loop
-│   ├── injection/             # AI injection testing
-│   ├── redteam/               # Pentesting modules
-│   └── devices/               # Physical device scripts
-├── config.yaml.example        # Configuration template
-├── requirements.txt           # Python dependencies
-└── README.md                  # This file
+│   ├── api/              # FastAPI application
+│   │   ├── main.py       # App entry point
+│   │   ├── dependencies.py  # Auth middleware
+│   │   └── routes/       # API endpoints
+│   │       ├── auth.py   # JWT authentication
+│   │       ├── targets.py
+│   │       ├── scans.py  # Nmap integration
+│   │       ├── injection.py
+│   │       └── ...
+│   ├── core/             # Core framework
+│   │   ├── auth_utils.py # JWT utilities
+│   │   ├── base_agent.py
+│   │   └── hitl.py       # Human-in-the-loop
+│   ├── database/         # SQLAlchemy ORM
+│   │   ├── connection.py
+│   │   └── models.py     # 9 tables
+│   ├── redteam/          # Red team operations
+│   │   └── modules/
+│   │       ├── scanner.py        # Real nmap
+│   │       └── exploit_executor.py
+│   └── injection/        # Security testing
+│       └── scanners/
+│           └── web_vuln_scanner.py  # Real HTTP tests
+├── tests/                # Test suite
+└── requirements.txt
 ```
 
 ## ⚠️ Disclaimer
 
-**This tool is for authorized security testing only.** Users are responsible for complying with applicable laws and obtaining proper authorization before testing any systems they do not own.
+**For authorized security testing only.** Users must comply with applicable laws and obtain proper authorization before testing any systems they do not own.
 
 ## 📄 License
 
-MIT License - See LICENSE file for details
+MIT License - See LICENSE file
 
 ## 👤 Author
 
 **Thundernight1** - Cybersecurity Research & Development
-
----
-
-**Version**: 1.0.0  
-**Status**: Production Release  
-**Platform**: Kali Linux, macOS, Ubuntu

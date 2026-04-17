@@ -1,23 +1,42 @@
-"""Target endpoints"""
+"""Target endpoints with authentication"""
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
+
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent.parent))
+
 from database import get_db
-from database.models import Target
+from database.models import Target, AuditLog
+from api.dependencies import get_current_user
+from core.agents.operator import OperatorAgent
 
 router = APIRouter()
+operator = OperatorAgent()
 
 @router.get("/")
 def list_targets(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
     is_active: Optional[bool] = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
-    """List all targets"""
+    """List all targets for current user"""
     query = db.query(Target)
     if is_active is not None:
         query = query.filter(Target.is_active == is_active)
+    
+    # Log access
+    log = AuditLog(
+        user_id=current_user.id,
+        action="target_list",
+        resource_type="target",
+        details={"filters": {"is_active": is_active}}
+    )
+    db.add(log)
+    db.commit()
     
     total = query.count()
     targets = query.offset(skip).limit(limit).all()
@@ -43,11 +62,26 @@ def list_targets(
     }
 
 @router.get("/{target_id}")
-def get_target(target_id: int, db: Session = Depends(get_db)):
+def get_target(
+    target_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
     """Get target by ID"""
     target = db.query(Target).filter(Target.id == target_id).first()
     if not target:
         raise HTTPException(status_code=404, detail="Target not found")
+    
+    # Log access
+    log = AuditLog(
+        user_id=current_user.id,
+        action="target_view",
+        resource_type="target",
+        resource_id=target_id
+    )
+    db.add(log)
+    db.commit()
+    
     return {
         "id": target.id,
         "name": target.name,
@@ -67,9 +101,19 @@ def create_target(
     port: Optional[int] = None,
     protocol: str = "http",
     description: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """Create new target"""
+    # Validate host format
+    if not host or len(host) < 3:
+        raise HTTPException(400, "Host must be at least 3 characters")
+    
+    # Check for duplicates
+    existing = db.query(Target).filter(Target.host == host).first()
+    if existing:
+        raise HTTPException(409, "Target with this host already exists")
+    
     target = Target(
         name=name,
         host=host,
@@ -78,6 +122,15 @@ def create_target(
         description=description
     )
     db.add(target)
+    
+    # Log creation
+    log = AuditLog(
+        user_id=current_user.id,
+        action="target_create",
+        resource_type="target",
+        details={"host": host, "name": name}
+    )
+    db.add(log)
     db.commit()
     db.refresh(target)
     

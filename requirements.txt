@@ -35,3 +35,12 @@ weasyprint>=59.0; platform_system != "Windows"
 pytest>=7.0.0
 black>=23.0.0
 flake8>=6.0.0
+
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+PyJWT>=2.8.0
+
+# Core dependencies for real functionality
+python-nmap>=0.7.1
+requests>=2.31.0
+cryptography>=41.0.0
