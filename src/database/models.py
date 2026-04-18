@@ -2,7 +2,7 @@
 from sqlalchemy import Column, Integer, String, DateTime, Text, Boolean, JSON, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from database.connection import Base
+from .connection import Base
 import enum
 
 class ScanStatus(str, enum.Enum):
