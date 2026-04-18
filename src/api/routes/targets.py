@@ -10,10 +10,8 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 from database import get_db
 from database.models import Target, AuditLog
 from api.dependencies import get_current_user
-from core.agents.operator import OperatorAgent
 
 router = APIRouter()
-operator = OperatorAgent()
 
 @router.get("/")
 def list_targets(

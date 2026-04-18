@@ -48,3 +48,8 @@ cryptography>=41.0.0
 # Database
 sqlalchemy>=2.0.0
 asyncpg>=0.29.0
+
+# Missing dependencies (fix test failures)
+aiohttp>=3.8.0
+httpx>=0.24.0
+python-dotenv>=0.19.0
