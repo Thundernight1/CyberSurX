@@ -1,134 +1,84 @@
-"""Real injection testing module"""
+"""Web vulnerability scanner - SQLi, XSS detection"""
 import requests
-import json
-from typing import Dict, List, Optional
-from urllib.parse import urljoin, urlparse
+from typing import Dict, List
 
 class WebVulnerabilityScanner:
-    """Real web vulnerability scanner"""
+    """Scan web applications for vulnerabilities"""
     
     SQLI_PAYLOADS = [
-        "' OR '1'='1",
-        "' OR 1=1--",
         "'; DROP TABLE users; --",
+        "' OR '1'='1",
         "' UNION SELECT * FROM users --",
-        "admin'--",
-        "1' AND 1=1--",
-        "1' AND 1=2--"
+        "1; DELETE FROM users WHERE 'a'='a",
     ]
     
     XSS_PAYLOADS = [
-        "<script>alert(1)</script>",
-        "<img src=x onerror=alert(1)>",
-        "<svg onload=alert(1)>",
-        "'-><script>alert(1)</script>",
-        "javascript:alert(1)"
+        "<script>alert('XSS')</script>",
+        "<img src=1 onerror=alert('XSS')>",
+        "<svg onload=alert('XSS')>",
     ]
     
     def __init__(self, timeout: int = 10):
         self.timeout = timeout
         self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "CyberSurX/1.0 Security Scanner"
-        })
     
-    def test_sql_injection(self, url: str, param: str = None) -> Dict:
+    def test_sql_injection(self, url: str) -> Dict:
         """Test for SQL injection"""
         results = []
-        
-        parsed = urlparse(url)
-        base_url = f"{parsed.scheme}://{parsed.netloc}"
-        
-        for payload in self.SQLI_PAYLOADS[:3]:  # Test first 3 payloads
+        for payload in self.SQLI_PAYLOADS[:2]:  # Limit for demo
             try:
-                # Try GET with payload
-                test_url = f"{url}?test={payload}" if "?" not in url else f"{url}&test={payload}"
-                
+                test_url = f"{url}?id={payload}"
                 response = self.session.get(test_url, timeout=self.timeout)
                 
                 # Check for SQL errors
-                error_indicators = [
-                    "sql syntax",
-                    "mysql_fetch",
-                    "pg_query",
-                    "sqlite_query",
-                    "ORA-",
-                    "syntax error"
-                ]
-                
-                found_error = any(indicator.lower() in response.text.lower() 
-                                 for indicator in error_indicators)
-                
-                results.append({
-                    "payload": payload,
-                    "url": test_url,
-                    "status_code": response.status_code,
-                    "response_length": len(response.text),
-                    "potential_vulnerable": found_error
-                })
-                
-            except requests.RequestException as e:
-                results.append({
-                    "payload": payload,
-                    "error": str(e)
-                })
+                if any(err in response.text.lower() for err in ['sql', 'mysql', 'sqlite', 'error']):
+                    results.append({"payload": payload, "suspicious": True})
+                else:
+                    results.append({"payload": payload, "suspicious": False})
+            except:
+                results.append({"payload": payload, "error": "Connection failed"})
         
         return {
             "vulnerability": "SQL Injection",
-            "url": url,
-            "tested_payloads": len(results),
+            "target": url,
             "results": results,
-            "recommendation": "Use parameterized queries"
+            "recommendation": "Use parameterized queries and input validation"
         }
     
     def test_xss(self, url: str) -> Dict:
-        """Test for XSS"""
+        """Test for XSS vulnerabilities"""
         results = []
-        
-        for payload in self.XSS_PAYLOADS[:3]:
+        for payload in self.XSS_PAYLOADS:
             try:
-                test_url = f"{url}?q={payload}" if "?" not in url else f"{url}&q={payload}"
-                
+                test_url = f"{url}?q={payload}"
                 response = self.session.get(test_url, timeout=self.timeout)
                 
-                # Check if payload reflected
-                is_reflected = payload in response.text
-                
-                results.append({
-                    "payload": payload,
-                    "url": test_url,
-                    "status_code": response.status_code,
-                    "reflected": is_reflected,
-                    "potential_vulnerable": is_reflected
-                })
-                
-            except requests.RequestException as e:
-                results.append({
-                    "payload": payload,
-                    "error": str(e)
-                })
+                if payload in response.text:
+                    results.append({"payload": payload, "reflected": True})
+                else:
+                    results.append({"payload": payload, "reflected": False})
+            except:
+                results.append({"payload": payload, "error": "Connection failed"})
         
         return {
             "vulnerability": "Cross-Site Scripting (XSS)",
-            "url": url,
-            "tested_payloads": len(results),
+            "target": url,
             "results": results,
-            "recommendation": "Encode output and validate input"
+            "recommendation": "Implement CSP headers and output encoding"
         }
     
     def test_open_ports(self, host: str, ports: List[int] = None) -> Dict:
-        """Test if common web ports are open"""
+        """Basic port scanning with socket"""
         import socket
         
         if ports is None:
-            ports = [80, 443, 8080, 3000, 5000, 8000, 8443]
+            ports = [21, 22, 23, 25, 53, 80, 443, 3306, 3389, 5432, 8080, 8443]
         
         open_ports = []
-        
         for port in ports:
             try:
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sock.settimeout(2)
+                sock.settimeout(1)
                 result = sock.connect_ex((host, port))
                 if result == 0:
                     open_ports.append(port)
@@ -138,18 +88,7 @@ class WebVulnerabilityScanner:
         
         return {
             "host": host,
-            "scanned_ports": len(ports),
             "open_ports": open_ports,
-            "services": {
-                80: "HTTP",
-                443: "HTTPS",
-                8080: "HTTP Proxy",
-                3000: "Node.js/Dev",
-                5000: "Flask/Dev",
-                8000: "Django/Dev"
-            }
+            "scanned_ports": len(ports),
+            "summary": f"Found {len(open_ports)} open ports out of {len(ports)} scanned"
         }
-
-if __name__ == "__main__":
-    scanner = WebVulnerabilityScanner()
-    print(json.dumps(scanner.test_open_ports("127.0.0.1"), indent=2))

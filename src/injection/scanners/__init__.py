@@ -1,1 +1,1 @@
-"""AIG-AgentTeam package"""
+from .web_vuln_scanner import WebVulnerabilityScanner
